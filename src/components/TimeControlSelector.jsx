@@ -1,10 +1,35 @@
 import { Clock } from "lucide-react";
 import { useState } from "react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+
 export default function TimeControlSelector() {
   const [mode, setMode] = useState("blitz");
   const [time, setTime] = useState(5);
   const [increment, setIncrement] = useState(0);
+  const [starting, setStarting] = useState(false);
+  const [session, setSession] = useState(null);
+  const [error, setError] = useState("");
+
+  const startDemo = async () => {
+    setStarting(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({
+        speed: mode,
+        minutes: String(time),
+        increment: String(increment),
+      });
+      const res = await fetch(`${BACKEND_URL}/start-demo?${params.toString()}`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed to start demo");
+      const data = await res.json();
+      setSession(data);
+    } catch (e) {
+      setError("Could not start demo. Try again.");
+    } finally {
+      setStarting(false);
+    }
+  };
 
   return (
     <section id="play" className="max-w-6xl mx-auto px-4 py-10">
@@ -46,8 +71,19 @@ export default function TimeControlSelector() {
         </div>
         <div className="mt-6 flex items-center justify-between">
           <p className="text-slate-600 text-sm">Selected: {mode} • {time}+{increment}</p>
-          <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Start Demo</button>
+          <button onClick={startDemo} disabled={starting}
+            className={`text-white px-4 py-2 rounded-md ${starting? 'bg-emerald-400' : 'bg-emerald-600 hover:bg-emerald-700'}`}> {starting? 'Starting…' : 'Start Demo'}</button>
         </div>
+        {session && (
+          <div className="mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-md">
+            Session started: {session.sessionId}
+          </div>
+        )}
+        {error && (
+          <div className="mt-4 text-sm text-red-700 bg-red-50 border border-red-200 px-3 py-2 rounded-md">
+            {error}
+          </div>
+        )}
       </div>
     </section>
   );

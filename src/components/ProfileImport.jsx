@@ -1,6 +1,22 @@
 import { useState } from "react";
 import { DownloadCloud } from "lucide-react";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
+
+async function importFrom(source, username, limit = 50) {
+  const endpoint = source === "chesscom" ? "/import/chesscom" : "/import/lichess";
+  const res = await fetch(`${BACKEND_URL}${endpoint}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, limit }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(t || `Failed to import from ${source} for ${username}`);
+  }
+  return res.json();
+}
+
 export default function ProfileImport() {
   const [chessComProfiles, setChessComProfiles] = useState([
     "53_karthik",
@@ -14,13 +30,41 @@ export default function ProfileImport() {
     "KarthikSajja",
   ]);
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleImport = (e) => {
+  const handleImport = async (e) => {
     e.preventDefault();
-    setStatus(
-      "Queued import. We’ll fetch recent games from chess.com and lichess and prepare training."
-    );
-    // In a full app, this would call the backend to import and train.
+    setLoading(true);
+    setStatus("Starting import…");
+
+    let total = 0;
+    const details = [];
+
+    try {
+      for (const u of chessComProfiles.filter(Boolean)) {
+        try {
+          const r = await importFrom("chesscom", u.trim(), 50);
+          total += r.inserted || 0;
+          details.push(`chess.com/${u}: ${r.inserted || 0}`);
+        } catch (err) {
+          details.push(`chess.com/${u}: error`);
+        }
+      }
+      for (const u of lichessProfiles.filter(Boolean)) {
+        try {
+          const r = await importFrom("lichess", u.trim(), 50);
+          total += r.inserted || 0;
+          details.push(`lichess/${u}: ${r.inserted || 0}`);
+        } catch (err) {
+          details.push(`lichess/${u}: error`);
+        }
+      }
+      setStatus(`Imported ${total} games. ${details.join(" • ")}`);
+    } catch (err) {
+      setStatus("Import failed. Please verify usernames and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const updateChessCom = (index, value) => {
@@ -52,7 +96,7 @@ export default function ProfileImport() {
                   value={p}
                   onChange={(e) => updateChessCom(idx, e.target.value)}
                   placeholder="chess.com username"
-                  className="md:col-span-2 w-full px-3 py-2 rounded-md border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="md:col-span-2 w-full px-3 py-2 rounded-md border border-solid border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             ))}
@@ -79,9 +123,10 @@ export default function ProfileImport() {
             </p>
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md"
+              disabled={loading}
+              className={`px-4 py-2 rounded-md text-white ${loading ? "bg-emerald-400" : "bg-emerald-600 hover:bg-emerald-700"}`}
             >
-              Import Games
+              {loading ? "Importing…" : "Import Games"}
             </button>
           </div>
           {status && (
