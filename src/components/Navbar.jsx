@@ -1,4 +1,4 @@
-import { Brain, Bot, Settings } from "lucide-react";
+import { Bot, Settings } from "lucide-react";
 
 export default function Navbar() {
   return (
