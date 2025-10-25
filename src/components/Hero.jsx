@@ -1,9 +1,10 @@
 import { Rocket, Star, Swords } from "lucide-react";
+import Spline from "@splinetool/react-spline";
 
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-cyan-50" />
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-cyan-50 pointer-events-none" />
       <div className="relative max-w-6xl mx-auto px-4 py-16 md:py-24">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
@@ -29,40 +30,15 @@ export default function Hero() {
               </a>
             </div>
           </div>
-          <div className="relative">
-            <div className="aspect-square rounded-2xl border border-slate-200 bg-white shadow-sm p-4">
-              <ChessPreview />
-            </div>
+          <div className="relative aspect-square rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <Spline
+              scene="https://prod.spline.design/UGnf9D1Hp3OG8vSG/scene.splinecode"
+              style={{ width: "100%", height: "100%" }}
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/30 via-transparent to-transparent" />
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function ChessPreview() {
-  const files = ["a","b","c","d","e","f","g","h"];
-  const ranks = [8,7,6,5,4,3,2,1];
-  const startPieces = new Map([
-    ["a8","♜"],["b8","♞"],["c8","♝"],["d8","♛"],["e8","♚"],["f8","♝"],["g8","♞"],["h8","♜"],
-    ["a7","♟"],["b7","♟"],["c7","♟"],["d7","♟"],["e7","♟"],["f7","♟"],["g7","♟"],["h7","♟"],
-    ["a2","♙"],["b2","♙"],["c2","♙"],["d2","♙"],["e2","♙"],["f2","♙"],["g2","♙"],["h2","♙"],
-    ["a1","♖"],["b1","♘"],["c1","♗"],["d1","♕"],["e1","♔"],["f1","♗"],["g1","♘"],["h1","♖"],
-  ]);
-
-  return (
-    <div className="grid grid-cols-8 grid-rows-8 w-full h-full rounded-xl overflow-hidden">
-      {ranks.map(r => files.map((f, i) => {
-        const square = `${f}${r}`;
-        const isDark = (i + r) % 2 === 0;
-        return (
-          <div key={square} className={`${isDark ? 'bg-emerald-200' : 'bg-emerald-50'} flex items-center justify-center text-2xl select-none`}>
-            <span className="">
-              {startPieces.get(square) || ''}
-            </span>
-          </div>
-        );
-      }))}
-    </div>
   );
 }
